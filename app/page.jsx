@@ -1,198 +1,183 @@
-'use client';
+import Link from "next/link";
+import { ArrowRight, BarChart3, BrainCircuit, CheckCircle2, Crown, FileText, Gauge, History, Layers, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
-import { useState } from 'react';
-import { ArrowRight, BarChart3, BrainCircuit, Crown, Loader2, ShieldCheck, Zap } from 'lucide-react';
-import { seoModes } from '@/lib/modes';
-import ModeCard from '@/components/ModeCard';
-import ResultPanel from '@/components/ResultPanel';
+const modes = [
+  {
+    title: "Hybrid SEO Optimizer",
+    status: "Active",
+    checks: "76+ checks",
+    desc: "Rank Math + Yoast + NLP + HCU signals in one workflow.",
+  },
+  {
+    title: "Rank Math Optimizer",
+    status: "Coming Soon",
+    checks: "26 checks",
+    desc: "Keyword placement, content quality, links, title and metadata.",
+  },
+  {
+    title: "Yoast SEO Optimizer",
+    status: "Coming Soon",
+    checks: "50+ checks",
+    desc: "Readability, structure, keyphrase distribution and green-light checks.",
+  },
+  {
+    title: "Semantic NLP SEO",
+    status: "Coming Soon",
+    checks: "12-step NLP",
+    desc: "Entity mapping, content gaps, TF-IDF terms and snippet formatting.",
+  },
+  {
+    title: "HCU Optimizer",
+    status: "Coming Soon",
+    checks: "Helpful Content",
+    desc: "Google Helpful Content quality, experience, E-E-A-T and originality signals.",
+  },
+];
 
-export default function Home() {
-  const [selectedMode, setSelectedMode] = useState('hybrid');
-  const [keyword, setKeyword] = useState('');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [tone, setTone] = useState('Professional');
-  const [contentType, setContentType] = useState('Blog Article');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
+const features = [
+  [Gauge, "SEO Scoring", "Instant score cards for optimized content quality."],
+  [FileText, "Content Rewrite", "Turn rough drafts into cleaner, structured SEO-ready articles."],
+  [Layers, "Modular Modes", "Launch Hybrid now and add Rank Math, Yoast, NLP, and HCU later."],
+  [History, "Saved History", "Every optimization can be saved and reviewed from your dashboard."],
+];
 
- async function optimizeContent(e) {
-  e.preventDefault();
-
-  // ✅ USAGE LIMIT (ADD THIS PART)
-  const usage = Number(localStorage.getItem("usage") || 0);
-
-  if (usage >= 100) {
-    setError("Free limit reached. Upgrade to continue.");
-    return;
-  }
-
-  localStorage.setItem("usage", usage + 1);
-
-  // EXISTING CODE
-  setError('');
-  setLoading(true);
-  setResult(null);
-
-  try {
-    const res = await fetch('/api/optimize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: selectedMode, keyword, title, content, tone, contentType })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error || 'Something went wrong');
-    if (data.status === 'coming_soon') throw new Error(data.message);
-
-    setResult(data.result);
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-}
+export default function LandingPage() {
   return (
-    
-    <main className="min-h-screen gradient-bg">
-      <nav className="mx-auto max-w-7xl px-6 py-6 flex items-center justify-between">
-        <div className="flex justify-end mb-6">
-  <a
-    href="/history"
-    className="rounded-full border border-white/10 px-5 py-2 text-sm font-semibold text-white hover:bg-white/10"
-  >
-    History
-  </a>
-</div>
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl premium-button flex items-center justify-center font-black text-white shadow-[0_0_30px_rgba(124,58,237,.35)]">RF</div>
-          <div>
-            <p className="font-black text-lg text-white">RankForge AI</p>
-            <p className="text-xs text-slate-300">Premium AI SEO Writing Assistant</p>
-          </div>
-        </div>
-        <a href="#optimizer" className="hidden sm:inline-flex rounded-full premium-button px-5 py-2 text-sm font-bold">Start Free</a>
-      </nav>
+    <main className="min-h-screen bg-[#050814] text-white overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,.25),transparent_35%),radial-gradient(circle_at_top_right,rgba(37,99,235,.18),transparent_30%)]" />
 
-      <section className="mx-auto max-w-7xl px-6 pt-12 pb-10">
-        <div className="grid lg:grid-cols-[1.05fr_.95fr] gap-8 items-center">
+      <div className="relative mx-auto max-w-7xl px-6 py-8">
+        <nav className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center font-black shadow-[0_0_30px_rgba(124,58,237,.45)]">
+              RF
+            </div>
+            <div>
+              <p className="font-black text-lg">RankForge AI</p>
+              <p className="text-xs text-gray-400">Premium AI SEO Writing Assistant</p>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <Link href="/history" className="hidden sm:inline-flex rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/10">
+              History
+            </Link>
+            <Link href="/dashboard" className="rounded-xl bg-white text-[#050814] px-4 py-2 text-sm font-bold hover:bg-gray-200">
+              Open App
+            </Link>
+          </div>
+        </nav>
+
+        <section className="grid lg:grid-cols-[1.05fr_.95fr] gap-10 items-center pt-20 pb-16">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm text-slate-100">
-              <Crown size={16} className="text-gold" /> Version 1: Hybrid SEO Mode Active
-            </span>
-            <h1 className="mt-6 text-5xl md:text-7xl font-black tracking-tight leading-[1.03] text-white">
-              Turn rough content into <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-white to-gold">SEO-ready articles</span>.
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-sm text-purple-200">
+              <Crown size={16} /> Version 1: Hybrid SEO Mode Active
+            </div>
+
+            <h1 className="mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.03]">
+              Build SEO-ready content with an <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-400">AI writing assistant</span>.
             </h1>
-            <p className="mt-6 text-lg text-slate-200 leading-8 max-w-2xl">
-              RankForge AI is built as a modular SEO SaaS. Hybrid SEO launches first, while Rank Math, Yoast, Semantic NLP, and HCU modes are ready to plug in later.
+
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-300">
+              RankForge AI helps bloggers, agencies, and businesses turn rough drafts into optimized content with Hybrid SEO checks inspired by Rank Math, Yoast, Semantic NLP, and Google Helpful Content signals.
             </p>
+
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#optimizer" className="inline-flex items-center gap-2 rounded-2xl premium-button px-6 py-4 font-bold">
-                Optimize Content <ArrowRight size={18} />
-              </a>
-              <a href="#modes" className="inline-flex items-center gap-2 rounded-2xl bg-white/8 border border-white/10 hover:bg-white/12 px-6 py-4 font-bold transition">
+              <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 font-bold shadow-[0_0_35px_rgba(124,58,237,.4)] hover:scale-[1.02] transition">
+                Start Optimizing <ArrowRight size={18} />
+              </Link>
+              <a href="#modes" className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-4 font-bold hover:bg-white/10">
                 View Modes
               </a>
             </div>
           </div>
 
-          <div className="premium-card rounded-[2rem] p-6">
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl">
             <div className="grid grid-cols-2 gap-4">
-              {[
-                ['76+', 'SEO Checks', BarChart3],
-                ['5', 'Mode System', BrainCircuit],
-                ['HCU', 'Ready Badge', ShieldCheck],
-                ['AI', 'Rewrite Engine', Zap]
-              ].map(([value, label, Icon]) => (
-                <div key={label} className="rounded-3xl bg-slate-950/70 border border-white/10 p-5 shadow-[0_18px_40px_rgba(0,0,0,.22)]">
-                  <Icon className="text-gold" />
-                  <p className="mt-5 text-3xl font-black text-white">{value}</p>
-                  <p className="text-sm text-slate-300">{label}</p>
-                </div>
-                
-              ))}
+              <HeroStat icon={BarChart3} value="76+" label="SEO Checks" />
+              <HeroStat icon={BrainCircuit} value="5" label="Mode System" />
+              <HeroStat icon={ShieldCheck} value="HCU" label="Ready Badge" />
+              <HeroStat icon={Zap} value="AI" label="Rewrite Engine" />
             </div>
-            <div className="mt-5 rounded-3xl bg-black/35 border border-white/10 p-5">
-              <p className="text-sm text-slate-300">Current MVP Focus</p>
-              <p className="mt-2 text-xl font-bold text-white">Hybrid SEO Optimizer</p>
-              <p className="mt-2 text-sm text-slate-300 leading-6">One engine for content rewriting, SEO data, score cards, checklist reports, and suggestions.</p>
+            <div className="mt-5 rounded-3xl border border-white/10 bg-black/30 p-5">
+              <p className="text-sm text-gray-400">Current MVP Focus</p>
+              <h3 className="mt-2 text-2xl font-black">Hybrid SEO Optimizer</h3>
+              <p className="mt-2 text-sm leading-6 text-gray-300">
+                One active engine for content rewriting, SEO metadata, score cards, reports, saved history, and future mode expansion.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="modes" className="mx-auto max-w-7xl px-6 py-10">
-        <div className="flex items-end justify-between gap-6 flex-wrap">
-          <div>
-            <p className="text-gold font-bold">Modular Mode System</p>
-            <h2 className="mt-2 text-3xl md:text-4xl font-black text-white">Launch one mode now. Add the rest later.</h2>
+        <section className="py-14">
+          <div className="mb-8 max-w-2xl">
+            <p className="font-bold text-purple-300">Why RankForge AI</p>
+            <h2 className="mt-2 text-4xl font-black">Everything your first SEO SaaS needs.</h2>
           </div>
-          <p className="text-slate-300 max-w-xl">The UI, API, and mode structure are already prepared for future SEO modes.</p>
-        </div>
-        <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {seoModes.map((mode) => (
-            <ModeCard key={mode.id} mode={mode} selected={selectedMode === mode.id} onSelect={setSelectedMode} />
-          ))}
-        </div>
-      </section>
 
-      <section id="optimizer" className="mx-auto max-w-7xl px-6 py-12">
-        <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-6 items-start">
-          <form onSubmit={optimizeContent} className="premium-card rounded-[2rem] p-6 lg:sticky lg:top-6">
-            <p className="text-gold font-bold">Hybrid SEO Optimizer</p>
-            <h2 className="mt-2 text-3xl font-black text-white">Create a New Optimization</h2>
-            <p className="mt-2 text-slate-300">Paste your draft and target keyword. Add your AI API key when you are ready for real AI results.</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {features.map(([Icon, title, desc]) => (
+              <div key={title} className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 hover:border-purple-500/50 transition">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600/20 text-purple-300">
+                  <Icon size={22} />
+                </div>
+                <h3 className="text-xl font-black">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-gray-400">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-            <div className="mt-6 space-y-4">
-              <div>
-                <label className="text-sm text-slate-200">Target Keyword</label>
-                <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="best running shoes" className="mt-2 w-full rounded-2xl input-premium px-4 py-3" />
-              </div>
-              <div>
-                <label className="text-sm text-slate-200">Content Title</label>
-                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Your article title" className="mt-2 w-full rounded-2xl input-premium px-4 py-3" />
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-slate-200">Tone</label>
-                  <select value={tone} onChange={(e) => setTone(e.target.value)} className="mt-2 w-full rounded-2xl input-premium px-4 py-3">
-                    <option>Professional</option>
-                    <option>Friendly</option>
-                    <option>Expert</option>
-                    <option>Persuasive</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm text-slate-200">Content Type</label>
-                  <select value={contentType} onChange={(e) => setContentType(e.target.value)} className="mt-2 w-full rounded-2xl input-premium px-4 py-3">
-                    <option>Blog Article</option>
-                    <option>Landing Page</option>
-                    <option>Product Description</option>
-                    <option>Service Page</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm text-slate-200">Content Draft</label>
-                <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={12} placeholder="Paste your content draft here..." className="mt-2 w-full rounded-2xl input-premium px-4 py-3 leading-7" />
-              </div>
-              {error && <p className="rounded-2xl bg-red-500/10 border border-red-500/20 text-red-200 p-4 text-sm">{error}</p>}
-              <button disabled={loading} className="w-full rounded-2xl premium-button px-6 py-4 font-bold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} />}
-                {loading ? 'Optimizing...' : 'Optimize with Hybrid SEO'}
-              </button>
+        <section id="modes" className="py-14">
+          <div className="mb-8 flex items-end justify-between gap-6 flex-wrap">
+            <div>
+              <p className="font-bold text-purple-300">Modular Mode System</p>
+              <h2 className="mt-2 text-4xl font-black">Launch one mode now. Add the rest later.</h2>
             </div>
-          </form>
+            <p className="max-w-xl text-gray-400">The platform is structured so Rank Math, Yoast, NLP, and HCU modes can be plugged in as separate engines later.</p>
+          </div>
 
-          <ResultPanel result={result} />
-        </div>
-      </section>
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {modes.map((mode) => (
+              <div key={mode.title} className={`rounded-3xl border p-5 ${mode.status === "Active" ? "border-purple-500/50 bg-purple-600/10" : "border-white/10 bg-white/[0.04]"}`}>
+                <div className="mb-5 flex items-center justify-between">
+                  <Sparkles className={mode.status === "Active" ? "text-purple-300" : "text-gray-500"} />
+                  <span className={`rounded-full px-3 py-1 text-xs ${mode.status === "Active" ? "bg-green-500/15 text-green-300" : "bg-white/5 text-gray-400"}`}>{mode.status}</span>
+                </div>
+                <h3 className="font-black text-lg">{mode.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-gray-400">{mode.desc}</p>
+                <p className="mt-4 inline-flex rounded-full bg-white/5 px-3 py-1 text-xs text-gray-300">{mode.checks}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      <footer className="mx-auto max-w-7xl px-6 py-10 text-sm text-slate-400">
-        RankForge AI MVP — built for future Rank Math, Yoast, NLP, and HCU mode expansion.
-      </footer>
+        <section className="py-14">
+          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-r from-purple-600/20 to-blue-600/20 p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-black">Ready to test the optimizer?</h2>
+              <p className="mt-2 text-gray-300">Open the dashboard, create a mock optimization, and save it to Neon.</p>
+            </div>
+            <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-4 font-black text-[#050814] hover:bg-gray-200">
+              Open Dashboard <ArrowRight size={18} />
+            </Link>
+          </div>
+        </section>
+
+        <footer className="py-8 text-sm text-gray-500">
+          RankForge AI MVP — built for future Rank Math, Yoast, NLP, and HCU mode expansion.
+        </footer>
+      </div>
     </main>
+  );
+}
+
+function HeroStat({ icon: Icon, value, label }) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-black/30 p-5">
+      <Icon className="text-purple-300" />
+      <p className="mt-5 text-4xl font-black">{value}</p>
+      <p className="text-sm text-gray-400">{label}</p>
+    </div>
   );
 }
