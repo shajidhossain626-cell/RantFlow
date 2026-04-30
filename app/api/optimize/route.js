@@ -59,6 +59,27 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const { mode, keyword, title, content, tone, contentType } = body;
+    const FORCE_MOCK = true;
+
+if (FORCE_MOCK) {
+  const result = mockResult({ keyword, title, content });
+
+  await prisma.optimization.create({
+    data: {
+      mode,
+      keyword,
+      title: title || "",
+      inputContent: content,
+      optimizedContent: result.optimized_content || "",
+      seoTitle: result.seo_title || "",
+      metaDescription: result.meta_description || "",
+      slug: result.slug || "",
+      score: Number(result.score) || 0,
+    },
+  });
+
+  return Response.json({ result, mock: true });
+}
 
     if (!keyword || !content) {
       return Response.json({ error: 'Keyword and content are required.' }, { status: 400 });
