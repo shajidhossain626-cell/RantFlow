@@ -1,14 +1,17 @@
-import './globals.css';
+import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata = {
-  title: 'RankForge AI — Premium AI SEO Writing Assistant',
-  description: 'Optimize content with Hybrid SEO, Rank Math, Yoast, NLP, and HCU-ready workflows.'
+  title: "RankForge AI",
+  description: "Premium AI SEO Writing Assistant",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body suppressHydrationWarning>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -73,6 +73,17 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-2 text-sm text-purple-200">
               <Crown size={16} /> Version 1: Hybrid SEO Mode Active
             </div>
+            <a
+  href="/semantic-nlp"
+  className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6 hover:border-purple-500 transition"
+>
+  <div className="text-3xl mb-4">🧠</div>
+  <p className="text-sm text-green-400 mb-2">Active</p>
+  <h3 className="text-xl font-black">Semantic NLP SEO</h3>
+  <p className="mt-3 text-gray-400 text-sm">
+    Extract entities, topic clusters, LSI keywords, E-E-A-T signals, and semantic gaps.
+  </p>
+</a>
 
             <h1 className="mt-7 text-5xl md:text-7xl font-black tracking-tight leading-[1.03]">
               Build SEO-ready content with an <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-400">AI writing assistant</span>.

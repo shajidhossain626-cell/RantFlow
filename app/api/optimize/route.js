@@ -1,149 +1,134 @@
-import { prisma } from "@/lib/prisma";
-import OpenAI from 'openai';
-import { buildHybridPrompt } from '@/lib/prompts';
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
+import { buildHybridPrompt, buildSemanticNLPPrompt } from "@/lib/prompts";
 
-function mockResult({ keyword, title, content }) {
-  const safeKeyword = keyword || 'target keyword';
-  const wordCount = content ? content.trim().split(/\s+/).filter(Boolean).length : 0;
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
+
+// ─── Mock fallbacks ────────────────────────────────────────────────────────────
+function mockHybridResult(keyword) {
   return {
-    optimized_content: `# ${title || `Ultimate Guide to ${safeKeyword}`}
-
-Updated April 2026
-
-If you want better results for ${safeKeyword}, your content needs to be clear, helpful, and structured around the reader's real intent. This optimized draft is designed to be easy to read, SEO-friendly, and suitable for publishing after your final brand edits.
-
-## What This Content Covers
-
-This article explains the topic in a direct way, adds useful context, and organizes the content with short paragraphs. It avoids keyword stuffing while still using ${safeKeyword} naturally.
-
-## Why ${safeKeyword} Matters
-
-Readers usually search this topic because they want a clear answer, practical guidance, or a trustworthy recommendation. A strong article should answer the main question early, then expand with examples, steps, and useful takeaways.
-
-## Recommended Structure
-
-Use one clear H1, multiple H2 sections, short paragraphs, and a simple conclusion. Add internal links to related pages and external links to trusted sources.
-
-## Final Takeaway
-
-The best content is not only optimized for search engines. It should also help the reader make a better decision faster.
-
-[Internal Link: Related Guide]
-[External Source: Add authoritative source]`,
-    suggested_title: `${safeKeyword}: The Essential Guide for Better SEO Results`,
-    suggested_meta_description: `Learn ${safeKeyword} with a clear, SEO-friendly guide built for readers and search performance.`,
-    suggested_slug: safeKeyword.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-    seo_score: 88,
-    keyword_density: '1.4%',
-    word_count: Math.max(wordCount, 220),
-    readability_score: 72,
-    checks: [
-      { label: 'Keyword in SEO title', status: 'passed', note: 'Target keyword is placed near the beginning.' },
-      { label: 'Meta description created', status: 'passed', note: 'Under 155 characters.' },
-      { label: 'SEO slug generated', status: 'passed', note: 'Short and keyword focused.' },
-      { label: 'Helpful structure', status: 'passed', note: 'Content uses H2 sections and short paragraphs.' },
-      { label: 'Internal links', status: 'warning', note: 'Replace placeholder with your real website links.' },
-      { label: 'External sources', status: 'warning', note: 'Add trusted source URLs before publishing.' }
-    ],
+    overallScore: 74,
+    grade: "B+",
+    keywordDensity: "1.6%",
+    readabilityScore: 68,
     suggestions: [
-      'Add 2 real internal links from your website.',
-      'Add 2–3 authoritative source links.',
-      'Add an original example, case study, or first-hand experience section.',
-      'Add images with keyword-rich ALT text.'
+      `Use "${keyword}" in your H1 tag.`,
+      "Add internal links to related content.",
+      "Increase content length to 1,500+ words.",
+      "Add an FAQ section for featured snippets.",
+      "Compress images and add descriptive alt text.",
     ],
-    badge: 'Hybrid SEO Ready'
+    optimizedMeta: `Learn everything about ${keyword}. Expert guide covering best practices, examples, and actionable tips for 2025.`,
+    titleSuggestion: `${keyword}: Complete Guide (2025)`,
+    strengths: ["Good paragraph structure", "Relevant topic coverage"],
+    weaknesses: ["Thin content depth", "Missing LSI keywords"],
   };
 }
 
+function mockSemanticResult(keyword) {
+  return {
+    semanticScore: 71,
+    grade: "B",
+    searchIntent: {
+      detected: "informational",
+      intentMatch: 78,
+      recommendation: "Add more definitional and explanatory content to fully satisfy informational intent.",
+    },
+    entities: [
+      { name: keyword, type: "Concept", prominence: 90, seoValue: "high" },
+      { name: "Google Search", type: "Product", prominence: 60, seoValue: "high" },
+      { name: "Content Strategy", type: "Concept", prominence: 45, seoValue: "medium" },
+    ],
+    topicClusters: [
+      { cluster: "Core Concept", coverage: 80, missingSubtopics: ["historical context", "future trends"] },
+      { cluster: "Practical Application", coverage: 55, missingSubtopics: ["step-by-step process", "tools & resources"] },
+      { cluster: "Expert Insights", coverage: 30, missingSubtopics: ["case studies", "expert quotes", "statistics"] },
+    ],
+    lsiKeywords: {
+      detected: ["content optimization", "search ranking", "organic traffic", "on-page SEO"],
+      missing: ["semantic search", "natural language processing", "knowledge graph", "entity SEO", "topical authority"],
+      recommendation: "Incorporate missing LSI terms naturally throughout the content to expand semantic coverage.",
+    },
+    contentDepth: {
+      score: 62,
+      wordCount: 480,
+      uniqueConceptCount: 14,
+      assessment: "moderate",
+    },
+    eeatSignals: {
+      experience: 40,
+      expertise: 55,
+      authoritativeness: 35,
+      trustworthiness: 50,
+      overallEEAT: 45,
+      improvements: [
+        "Add author credentials or bio section.",
+        "Reference authoritative external sources with citations.",
+      ],
+    },
+    semanticGaps: [
+      "No mention of how search engines use NLP to parse this topic.",
+      "Missing subtopic coverage on related entities Google associates with this keyword.",
+      "No structured data / schema markup mentioned to reinforce entity signals.",
+    ],
+    optimizationActions: [
+      { priority: "high", action: `Add a dedicated section on "${keyword} and semantic search" with entity-rich language.`, impact: "Significantly improves topical authority score." },
+      { priority: "high", action: "Include at least 3 credible external citations (studies, .gov, .edu).", impact: "Boosts E-E-A-T trustworthiness signal." },
+      { priority: "medium", action: "Expand to 1,200+ words covering all topic cluster gaps.", impact: "Improves content depth assessment to 'comprehensive'." },
+      { priority: "medium", action: "Add FAQ schema targeting People Also Ask questions.", impact: "Increases SERP feature eligibility." },
+      { priority: "low", action: "Use more specific named entities (people, organizations, tools) in context.", impact: "Strengthens knowledge graph alignment." },
+    ],
+    rewrittenIntro: `${keyword} represents a foundational concept in modern search engine optimization, deeply intertwined with how Google's natural language processing systems — including BERT, MUM, and the Knowledge Graph — evaluate content relevance. Understanding ${keyword} requires examining both its semantic relationship to related entities and its role within a broader topical cluster that search engines use to determine authority.`,
+  };
+}
+
+// ─── Route Handler ─────────────────────────────────────────────────────────────
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { mode, keyword, title, content, tone, contentType } = body;
-    const FORCE_MOCK = true;
-
-if (FORCE_MOCK) {
-  const result = mockResult({ keyword, title, content });
-
-  await prisma.optimization.create({
-    data: {
-      mode,
-      keyword,
-      title: title || "",
-      inputContent: content,
-      optimizedContent: result.optimized_content || "",
-      seoTitle: result.seo_title || "",
-      metaDescription: result.meta_description || "",
-      slug: result.slug || "",
-      score: Number(result.score) || 0,
-    },
-  });
-
-  return Response.json({ result, mock: true });
-}
+    const { mode = "hybrid", keyword, content, meta, intent } = body;
 
     if (!keyword || !content) {
-      return Response.json({ error: 'Keyword and content are required.' }, { status: 400 });
+      return NextResponse.json(
+        { error: "keyword and content are required." },
+        { status: 400 }
+      );
     }
 
-    if (mode !== 'hybrid') {
-      return Response.json({ status: 'coming_soon', message: 'This mode is prepared for future release.' }, { status: 200 });
+    // Build the correct prompt based on mode
+    let prompt;
+    if (mode === "semantic-nlp") {
+      prompt = buildSemanticNLPPrompt({ keyword, content, intent });
+    } else {
+      prompt = buildHybridPrompt({ keyword, content, meta });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-     const mock = mockResult({ keyword, title, content });
-
-await prisma.optimization.create({
-  data: {
-    mode,
-    keyword,
-    title: title || "",
-    inputContent: content,
-    optimizedContent: mock.optimized_content || "",
-    seoTitle: mock.seo_title || "",
-    metaDescription: mock.meta_description || "",
-    slug: mock.slug || "",
-    score: Number(mock.score) || 0,
-  },
-});
-
-return Response.json({ result: mock, mock: true });
+    // If no OpenAI key, return mock data
+    if (!openai) {
+      const mock = mode === "semantic-nlp"
+        ? mockSemanticResult(keyword)
+        : mockHybridResult(keyword);
+      return NextResponse.json({ result: mock, mock: true });
     }
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You return only strict JSON. No markdown.' },
-        { role: 'user', content: buildHybridPrompt({ keyword, title, content, tone, contentType }) }
-      ],
-      temperature: 0.4,
-      response_format: { type: 'json_object' }
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.3,
+      response_format: { type: "json_object" },
     });
 
-    const raw = completion.choices[0]?.message?.content || '{}';
+    const raw = completion.choices[0].message.content;
     const result = JSON.parse(raw);
-   await prisma.optimization.create({
-  data: {
-    mode,
-    keyword,
-    title: title || "",
-    inputContent: content,
-    optimizedContent: result.optimized_content || "",
-    seoTitle: result.seo_title || "",
-    metaDescription: result.meta_description || "",
-    slug: result.slug || "",
-    score: Number(result.score) || 0,
-  },
-});
 
-return Response.json({ result, mock: false });
-  } catch (error) {
-    console.error(error);
-    return Response.json(
-  { error: "AI limit reached. Please try later." },
-  
-  { status: 500 }
-);
+    return NextResponse.json({ result, mock: false });
+  } catch (err) {
+    console.error("[/api/optimize] error:", err);
+    return NextResponse.json(
+      { error: "Optimization failed. Please try again." },
+      { status: 500 }
+    );
   }
-  
 }

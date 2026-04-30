@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.2.8",
     "@prisma/client": "^5.22.0",
     "@supabase/supabase-js": "latest",
     "lucide-react": "latest",
