@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Optimization {
+  id               String   @id @default(cuid())
+  mode             String
+  keyword          String
+  title            String?
+  inputContent     String
+  optimizedContent String
+  seoTitle         String?
+  metaDescription  String?
+  slug             String?
+  score            Int?
+  createdAt        DateTime @default(now())
+}
