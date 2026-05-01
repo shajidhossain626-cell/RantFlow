@@ -1,129 +1,259 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
 import { buildHybridPrompt, buildSemanticNLPPrompt } from "@/lib/prompts";
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
-// ─── Mock fallbacks ────────────────────────────────────────────────────────────
-function mockHybridResult(keyword) {
+// Change to false later when OpenAI credits are added
+const FORCE_MOCK = true;
+
+function mockHybridResult(keyword, content) {
   return {
-    overallScore: 74,
-    grade: "B+",
-    keywordDensity: "1.6%",
-    readabilityScore: 68,
-    suggestions: [
-      `Use "${keyword}" in your H1 tag.`,
-      "Add internal links to related content.",
-      "Increase content length to 1,500+ words.",
-      "Add an FAQ section for featured snippets.",
-      "Compress images and add descriptive alt text.",
+    optimized_content: `This is a Hybrid SEO optimized version for "${keyword}".\n\n${content}\n\nThe content has been improved for keyword placement, readability, meta relevance, and helpful content signals.`,
+    seo_title: `${keyword}: Complete SEO Guide`,
+    meta_description: `Learn about ${keyword} with this optimized, helpful, and SEO-ready guide.`,
+    slug: keyword.toLowerCase().replaceAll(" ", "-"),
+    score: 92,
+    keyword_density: "1.4%",
+    readability_score: 76,
+    checks: [
+      "Keyword reviewed",
+      "Meta description created",
+      "Slug optimized",
+      "Readability improved",
+      "Helpful content signals checked",
     ],
-    optimizedMeta: `Learn everything about ${keyword}. Expert guide covering best practices, examples, and actionable tips for 2025.`,
-    titleSuggestion: `${keyword}: Complete Guide (2025)`,
-    strengths: ["Good paragraph structure", "Relevant topic coverage"],
-    weaknesses: ["Thin content depth", "Missing LSI keywords"],
+    suggestions: [
+      "Add 2 internal links",
+      "Add FAQ section",
+      "Add one expert quote",
+      "Add image ALT text with keyword",
+    ],
+  };
+}
+function mockRankMathResult(keyword, content) {
+  return {
+    optimized_content: `Rank Math optimized version for "${keyword}".\n\n${content}\n\nThis content has been improved with stronger keyword placement, better readability, internal link suggestions, media placeholders, and title optimization.`,
+    seo_title: `${keyword}: 7 Proven Tips for Better Results`,
+    meta_description: `Discover ${keyword} with this Rank Math optimized guide covering practical tips, SEO structure, and helpful insights.`,
+    slug: keyword.toLowerCase().replaceAll(" ", "-"),
+    rank_math_score: 94,
+    score: 94,
+    checks_passed: 27,
+    keyword_density: "1.5%",
+    suggestions: [
+      "Add keyword in first paragraph",
+      "Add 2 internal links",
+      "Add 2 external authority links",
+      "Add image ALT tag with keyword",
+      "Add FAQ section for featured snippets",
+    ],
+  };
+}
+function mockYoastResult(keyword, content) {
+  return {
+    optimized_content: `Yoast SEO optimized version for "${keyword}".\n\n${content}\n\nThis version improves keyphrase distribution, readability, transition words, meta tags, content structure, internal links, and image SEO.`,
+    seo_title: `${keyword}: 9 Essential Tips for Better SEO`,
+    meta_description: `Improve ${keyword} with this Yoast-optimized guide covering readability, SEO structure, and practical tips.`,
+    slug: keyword.toLowerCase().replaceAll(" ", "-"),
+    yoast_score: 91,
+    score: 91,
+    checks_passed: 45,
+    readability_score: 78,
+    keyphrase_density: "1.3%",
+    suggestions: [
+      "Use keyphrase in the introduction",
+      "Add keyphrase in conclusion",
+      "Add transition words in 30%+ sentences",
+      "Keep paragraphs under 150 words",
+      "Add minimum 1 outbound and 1 internal link",
+      "Add keyphrase to image ALT text",
+    ],
   };
 }
 
-function mockSemanticResult(keyword) {
+function mockSemanticResult(keyword, content) {
   return {
-    semanticScore: 71,
-    grade: "B",
+    semanticScore: 88,
+    grade: "A",
     searchIntent: {
       detected: "informational",
-      intentMatch: 78,
-      recommendation: "Add more definitional and explanatory content to fully satisfy informational intent.",
+      intentMatch: 86,
+      recommendation:
+        "Add more explanatory sections and semantic subtopics to fully satisfy informational search intent.",
     },
     entities: [
-      { name: keyword, type: "Concept", prominence: 90, seoValue: "high" },
-      { name: "Google Search", type: "Product", prominence: 60, seoValue: "high" },
-      { name: "Content Strategy", type: "Concept", prominence: 45, seoValue: "medium" },
+      { name: keyword, type: "Concept", prominence: 92, seoValue: "high" },
+      { name: "Google Search", type: "Product", prominence: 70, seoValue: "high" },
+      { name: "Content Strategy", type: "Concept", prominence: 55, seoValue: "medium" },
     ],
     topicClusters: [
-      { cluster: "Core Concept", coverage: 80, missingSubtopics: ["historical context", "future trends"] },
-      { cluster: "Practical Application", coverage: 55, missingSubtopics: ["step-by-step process", "tools & resources"] },
-      { cluster: "Expert Insights", coverage: 30, missingSubtopics: ["case studies", "expert quotes", "statistics"] },
+      {
+        cluster: "Core Topic",
+        coverage: 82,
+        missingSubtopics: ["examples", "step-by-step explanation"],
+      },
+      {
+        cluster: "Search Intent",
+        coverage: 74,
+        missingSubtopics: ["comparison", "FAQ"],
+      },
+      {
+        cluster: "E-E-A-T",
+        coverage: 61,
+        missingSubtopics: ["expert quote", "author experience"],
+      },
     ],
     lsiKeywords: {
-      detected: ["content optimization", "search ranking", "organic traffic", "on-page SEO"],
-      missing: ["semantic search", "natural language processing", "knowledge graph", "entity SEO", "topical authority"],
-      recommendation: "Incorporate missing LSI terms naturally throughout the content to expand semantic coverage.",
+      detected: ["SEO content", "search ranking", "organic traffic"],
+      missing: [
+        "semantic search",
+        "entity SEO",
+        "topical authority",
+        "knowledge graph",
+      ],
+      recommendation:
+        "Add missing semantic keywords naturally to improve topical authority.",
     },
     contentDepth: {
-      score: 62,
-      wordCount: 480,
-      uniqueConceptCount: 14,
+      score: 72,
+      wordCount: content.split(/\s+/).filter(Boolean).length,
+      uniqueConceptCount: 18,
       assessment: "moderate",
     },
     eeatSignals: {
-      experience: 40,
-      expertise: 55,
-      authoritativeness: 35,
-      trustworthiness: 50,
-      overallEEAT: 45,
+      experience: 65,
+      expertise: 70,
+      authoritativeness: 62,
+      trustworthiness: 68,
+      overallEEAT: 66,
       improvements: [
-        "Add author credentials or bio section.",
-        "Reference authoritative external sources with citations.",
+        "Add author experience",
+        "Add external citations",
+        "Include real examples",
       ],
     },
     semanticGaps: [
-      "No mention of how search engines use NLP to parse this topic.",
-      "Missing subtopic coverage on related entities Google associates with this keyword.",
-      "No structured data / schema markup mentioned to reinforce entity signals.",
+      "Missing deeper entity coverage",
+      "Missing FAQ-style semantic answers",
+      "Missing authoritative source references",
     ],
     optimizationActions: [
-      { priority: "high", action: `Add a dedicated section on "${keyword} and semantic search" with entity-rich language.`, impact: "Significantly improves topical authority score." },
-      { priority: "high", action: "Include at least 3 credible external citations (studies, .gov, .edu).", impact: "Boosts E-E-A-T trustworthiness signal." },
-      { priority: "medium", action: "Expand to 1,200+ words covering all topic cluster gaps.", impact: "Improves content depth assessment to 'comprehensive'." },
-      { priority: "medium", action: "Add FAQ schema targeting People Also Ask questions.", impact: "Increases SERP feature eligibility." },
-      { priority: "low", action: "Use more specific named entities (people, organizations, tools) in context.", impact: "Strengthens knowledge graph alignment." },
+      {
+        priority: "high",
+        action: `Add a section explaining "${keyword}" using entity-rich language.`,
+        impact: "Improves semantic relevance and topical authority.",
+      },
+      {
+        priority: "medium",
+        action: "Add FAQ schema and People Also Ask style questions.",
+        impact: "Improves featured snippet potential.",
+      },
+      {
+        priority: "low",
+        action: "Add more related terms naturally.",
+        impact: "Improves semantic breadth.",
+      },
     ],
-    rewrittenIntro: `${keyword} represents a foundational concept in modern search engine optimization, deeply intertwined with how Google's natural language processing systems — including BERT, MUM, and the Knowledge Graph — evaluate content relevance. Understanding ${keyword} requires examining both its semantic relationship to related entities and its role within a broader topical cluster that search engines use to determine authority.`,
+    rewrittenIntro: `${keyword} is an important topic in modern SEO because search engines now understand meaning, entities, and context instead of only exact-match keywords.`,
   };
 }
 
-// ─── Route Handler ─────────────────────────────────────────────────────────────
 export async function POST(req) {
   try {
+    const { userId } = await auth();
     const body = await req.json();
-    const { mode = "hybrid", keyword, content, meta, intent } = body;
+
+    const {
+      mode = "hybrid",
+      keyword,
+      title = "",
+      content,
+      meta = "",
+      intent = "informational",
+    } = body;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "You must be logged in to optimize content." },
+        { status: 401 }
+      );
+    }
 
     if (!keyword || !content) {
       return NextResponse.json(
-        { error: "keyword and content are required." },
+        { error: "Keyword and content are required." },
         { status: 400 }
       );
     }
 
-    // Build the correct prompt based on mode
-    let prompt;
-    if (mode === "semantic-nlp") {
-      prompt = buildSemanticNLPPrompt({ keyword, content, intent });
-    } else {
-      prompt = buildHybridPrompt({ keyword, content, meta });
-    }
+    
+let result;
 
-    // If no OpenAI key, return mock data
-    if (!openai) {
-      const mock = mode === "semantic-nlp"
-        ? mockSemanticResult(keyword)
-        : mockHybridResult(keyword);
-      return NextResponse.json({ result: mock, mock: true });
-    }
+if (FORCE_MOCK || !openai) {
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
-      response_format: { type: "json_object" },
+  if (mode === "semantic-nlp") {
+    result = mockSemanticResult(keyword, content);
+
+  } else if (mode === "rankmath") {
+    result = mockRankMathResult(keyword, content);
+
+  } else if (mode === "yoast") {
+    result = mockYoastResult(keyword, content);
+
+  } else {
+    result = mockHybridResult(keyword, content);
+  }
+
+} else {
+
+  const prompt =
+    mode === "semantic-nlp"
+      ? buildSemanticNLPPrompt({ keyword, content, intent })
+      : buildHybridPrompt({ keyword, content, meta });
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.4,
+    response_format: { type: "json_object" },
+  });
+
+  result = JSON.parse(completion.choices[0].message.content);
+}
+    await prisma.optimization.create({
+      data: {
+        userId,
+        mode,
+        keyword,
+        title: title || "",
+        inputContent: content,
+        optimizedContent:
+          mode === "semantic-nlp"
+            ? JSON.stringify(result)
+            : result.optimized_content || result.optimizedContent || "",
+        seoTitle: result.seo_title || result.titleSuggestion || "",
+        metaDescription: result.meta_description || result.optimizedMeta || "",
+        slug: result.slug || keyword.toLowerCase().replaceAll(" ", "-"),
+        score: Number(
+          result.score ||
+result.rank_math_score ||
+result.yoast_score ||
+result.semanticScore ||
+result.overallScore ||
+0
+),
+      },
     });
 
-    const raw = completion.choices[0].message.content;
-    const result = JSON.parse(raw);
-
-    return NextResponse.json({ result, mock: false });
+    return NextResponse.json({
+      result,
+      mock: FORCE_MOCK || !openai,
+    });
   } catch (err) {
     console.error("[/api/optimize] error:", err);
     return NextResponse.json(

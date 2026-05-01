@@ -47,7 +47,30 @@ export default function Dashboard() {
         </div>
 
         {/* MODES GRID */}
+
+        <Link
+  href="/yoast"
+  className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6 hover:border-orange-500 transition"
+>
+  <div className="text-3xl mb-4">🎯</div>
+  <p className="text-green-400 text-sm mb-2">Active</p>
+  <h3 className="text-xl font-black">Yoast SEO Optimized</h3>
+  <p className="mt-3 text-gray-400 text-sm">
+    Get green lights for Yoast keyphrase usage, readability, structure, links, images, and meta checks.
+  </p>
+</Link>
         <div className="grid md:grid-cols-2 gap-6">
+          <Link
+  href="/rank-math"
+  className="block rounded-3xl border border-white/10 bg-white/[0.04] p-6 hover:border-green-500 transition"
+>
+  <div className="text-3xl mb-4">📊</div>
+  <p className="text-green-400 text-sm mb-2">Active</p>
+  <h3 className="text-xl font-black">Rank Math Optimized</h3>
+  <p className="mt-3 text-gray-400 text-sm">
+    Optimize content to pass Rank Math keyword placement, content quality, link strategy, and title checks.
+  </p>
+</Link>
 
           {/* HYBRID MODE */}
           <Link
